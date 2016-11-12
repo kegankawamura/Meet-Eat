@@ -1,6 +1,5 @@
-from app import db
 from sqlalchemy.dialects.postgresql import JSON
-from database import Base
+from database import Base, db
 
 class Session(Base):
   __tablename__ = 'session'
