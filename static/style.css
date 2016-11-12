@@ -4,7 +4,7 @@ h1 {
 }
 
 p a:hover {
-    color: hotpink;
+    color: gold;
 }
 
 img {
@@ -20,12 +20,12 @@ img {
 /* navbar */
 .navbar {
     background-color: midnightblue; 
-    padding: 10px; 
+    padding: 8px; 
 }
 
 .navbar-default .navbar-brand:hover, 
 .navbar-default .navbar-collapse .navbar-nav a:hover {
-    color: hotpink; 
+    color:gold; 
 }
 
 .navbar-default .navbar-brand, 
