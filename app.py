@@ -49,12 +49,16 @@ class SearchForm(Form):
     searchterm = StringField('Where do you want to eat?', validators=[Required()])
     submit = SubmitField('Submit')
 
+class CloseForm(Form):
+    close = SubmitField('Close Poll')
+
 @app.route("/", methods=['GET', 'POST'])
 def search():
-    form = SearchForm()
+    search_form = SearchForm()
+    close_form = CloseForm()
     address,error = "",False
-    if form.validate_on_submit():
-        session['searchterm'] = form.searchterm.data 
+    if search_form.validate_on_submit():
+        session['searchterm'] = search_form.searchterm.data 
         new_url,new_address = True, True
         try:
             location = gmaps.places_autocomplete(session['searchterm'])[0]
@@ -62,8 +66,8 @@ def search():
         except IndexError:
             error = True
         #geocode_result = gmaps.geocode(address)
-        return render_template('index.html',form=form,new_url=new_url,new_address=new_address,poll_url=poll_url+addon(),address=address,error=error)
-    return render_template('index.html', form=form, address=address)
+        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+addon(),address=address,error=error)
+    return render_template('index.html', form=search_form, address=address)
 
 """
 POLL VIEWS
