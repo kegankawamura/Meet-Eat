@@ -60,8 +60,9 @@ def search():
             location = gmaps.places_autocomplete(session['searchterm'])[0]
             address = location['description']
             rand_url = poll_url+addon()
-            session = Session(rand_url, session['user'], location)
-            db_session.add(session)
+            user_obj = db_session.query(User).filter_by(name=session['user']).first() 
+            s = Session(rand_url, user_obj, address)
+            db_session.add(s)
             db_session.commit()
         except IndexError:
             error = True
