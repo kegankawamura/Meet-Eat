@@ -8,7 +8,6 @@ from wtforms.validators import Required
 from database import db_session
 import string
 import random
-
 import ipdb
 
 app = Flask(__name__)
@@ -40,12 +39,23 @@ class PollForm(Form):
 @app.teardown_appcontext
 def shutdown_session(exception=None):
   db_session.remove()
+
 @app.route("/user/<unique_id>", methods=['GET', 'POST'])
 def poll(unique_id):
     form = PollForm()
     if form.validate_on_submit():
 	return render_template('thanks.html')
     return render_template('poll.html', form=form)
+
+@app.route("/login/<user>")
+def login(user):
+    user_item = db_session.query(User).filer_by(name=user).first()
+    if user_item:
+    	session['user'] = user_item
+	return render_template('login.html', user=user, result=True)
+    else:
+	return render_template('login.html', user=user, result=False)
+    
 
 @app.route("/resume")
 def hello():
@@ -57,6 +67,7 @@ class SearchForm(Form):
 
 @app.route("/", methods=['GET', 'POST'])
 def search():
+    form = SearchForm()
     if form.validate_on_submit():
         session['searchterm'] = form.searchterm.data 
         new_url = True

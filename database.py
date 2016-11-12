@@ -16,3 +16,23 @@ def init_db():
     # you will have to import them first before calling init_db()
     from models import *
     Base.metadata.create_all(bind=engine)
+    users = ["Tommy", "Averal", "Jordan", "Kegan", "Mason"]
+    for user in users:
+	print("Initializing " + user)
+    	get_or_create(db_session, User, name=user)
+    print("Initializing user done")
+
+def get_or_create(session, model, **kwargs):
+  instance = session.query(model).filter_by(**kwargs).first()
+  if instance:
+    print("User found")
+    return instance
+  else:
+    instance = model(**kwargs)
+    session.add(instance)
+    session.commit()
+    print("New user created")
+    return instance
+
+if __name__=="__main__":
+    init_db()
