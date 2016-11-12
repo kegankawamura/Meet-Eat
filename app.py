@@ -92,14 +92,17 @@ LOGIN VIEWS
 
 @app.route("/login/<user>")
 def login(user):
-    user_item = db_session.query(User).filer_by(name=user).first()
+    user_item = db_session.query(User).filter_by(name=user).first()
     if user_item:
-    	session['user'] = user_item
+    	session['user'] = user
 	return render_template('login.html', user=user, result=True)
     else:
 	return render_template('login.html', user=user, result=False)
     
-
+@app.route("/logout")
+def logout():
+    session['user'] = None
+    return render_template('logout.html')
 
 """
 MAIN APP
