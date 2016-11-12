@@ -59,10 +59,14 @@ def search():
         try:
             location = gmaps.places_autocomplete(session['searchterm'])[0]
             address = location['description']
+            rand_url = poll_url+addon()
+            session = Session(rand_url, session['user'], location)
+            db_session.add(session)
+            db_session.commit()
         except IndexError:
             error = True
         #geocode_result = gmaps.geocode(address)
-        return render_template('index.html',form=form,new_url=new_url,new_address=new_address,poll_url=poll_url+addon(),address=address,error=error)
+        return render_template('index.html',form=form,new_url=new_url,new_address=new_address,poll_url=rand_url,address=address,error=error)
     return render_template('index.html', form=form, address=address)
 
 """
