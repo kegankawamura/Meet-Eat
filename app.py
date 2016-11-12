@@ -9,6 +9,10 @@ import random
 
 from models import User, Session, Poll
 from database import db_session, db
+import googlemaps
+from datetime import datetime
+from tokens import ServerKey
+
 """
 APP SETTINGS
 """
@@ -25,6 +29,12 @@ SESSION CREATION
 
 new_url = False
 poll_url = "localhost:5000/"
+new_address = False
+error = False
+location,address = 0,""
+gmaps = googlemaps.Client(key=ServerKey)
+
+
 def addon():
     result = ""
     for _ in range(5):
@@ -42,11 +52,18 @@ class SearchForm(Form):
 @app.route("/", methods=['GET', 'POST'])
 def search():
     form = SearchForm()
+    address,error = "",False
     if form.validate_on_submit():
         session['searchterm'] = form.searchterm.data 
-        new_url = True
-        return render_template('index.html',form=form,searchterm=session.get('searchterm'),new_url = new_url,poll_url = poll_url+addon())
-    return render_template('index.html', form=form, searchterm=session.get('searchterm'))
+        new_url,new_address = True, True
+        try:
+            location = gmaps.places_autocomplete(session['searchterm'])[0]
+            address = location['description']
+        except IndexError:
+            error = True
+        #geocode_result = gmaps.geocode(address)
+        return render_template('index.html',form=form,new_url=new_url,new_address=new_address,poll_url=poll_url+addon(),address=address,error=error)
+    return render_template('index.html', form=form, address=address)
 
 """
 POLL VIEWS
@@ -87,7 +104,7 @@ def logout():
 MAIN APP
 """
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80)
 
 @app.teardown_appcontext
 def shutdown_session(exception=None):
