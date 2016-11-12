@@ -6,7 +6,8 @@ from flask.ext.bootstrap import Bootstrap
 from flask.ext.sqlalchemy import SQLAlchemy
 from wtforms.validators import Required
 from database import db_session
-from wiki_sentiment import * 
+import string
+import random
 
 import ipdb
 
@@ -16,7 +17,18 @@ app.config.from_object("config.Config")
 db = SQLAlchemy(app)
 
 app.config['SECRET_KEY'] = 'hard to guess'
+new_url = False
 
+def addon():
+    result = ""
+    for _ in range(5):
+        choose = random.randint(0,1)
+        if choose:
+            result += str(random.randint(1,9))
+        else:
+            result += random.choice(string.letters)
+    return result
+poll_url = "localhost:5000/"
 bootstrap = Bootstrap(app)
 
 class PollForm(Form):
@@ -39,13 +51,17 @@ def poll(unique_id):
 def hello():
     return render_template('index.html')
 
+class SearchForm(Form):
+    searchterm = StringField('Where do you want to eat?', validators=[Required()])
+    submit = SubmitField('Submit')
+
 @app.route("/", methods=['GET', 'POST'])
 def search():
     if form.validate_on_submit():
         session['searchterm'] = form.searchterm.data 
-        session['sentiment'], session['titlearticle'], session['wikiurl'] = get_sentiment_from_url(get_one_url_from_wiki_search(session.get('searchterm')))
-        return redirect(url_for('search'))
-    return render_template('search.html', form=form, searchterm=session.get('searchterm'), number=session.get('sentiment'), titlearticle=session.get('titlearticle'), wikiUrl=session.get('wikiurl'))
+        new_url = True
+        return render_template('index.html',form=form,searchterm=session.get('searchterm'),new_url = new_url,poll_url = poll_url+addon())
+    return render_template('index.html', form=form, searchterm=session.get('searchterm'))
 
 
 if __name__ == "__main__":
