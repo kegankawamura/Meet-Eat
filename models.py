@@ -8,7 +8,7 @@ class Session(Base):
   id = db.Column(db.Integer, primary_key=True)
   url_id = db.Column(db.String())
   owner = db.relationship("User")
-  owner_id = db.Column(db.Integer, ForeignKey('user.id'))
+  owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
   location = db.Column(db.String())
 
   def __init__(self, url_id, owner, location):
@@ -23,9 +23,9 @@ class Poll(Base):
   price = db.Column(db.String())
   resp = db.Column(db.String()) 
   session = db.relationship("Session") 
-  session_id = db.Column(db.Integer, ForeignKey('session.id'))
+  session_id = db.Column(db.Integer, db.ForeignKey('session.id'))
   user = db.relationship("User")
-  user_id = db.Column(db.Integer, ForeignKey('user.id')) 
+  user_id = db.Column(db.Integer, db.ForeignKey('user.id')) 
  
   def __init__(self, price, resp, session, user):
     self.price = price
@@ -37,7 +37,6 @@ class User(Base):
   __tablename__ = 'user'
   id = db.Column(db.Integer, primary_key=True)
   name = db.Column(db.String()) 
-  poll_id = db.Column(db.Integer, Foreign
 
   def __init__(self, name):
      self.name = name
