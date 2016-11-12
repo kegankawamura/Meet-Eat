@@ -6,7 +6,9 @@
 
 {% block page_content %}
 <div class="page-header">
-    <h1>{% if searchterm %}Here's where you want to eat: {{ searchterm }} 
+    <h1>{% if new_address and not error %}Here's where you want to eat: {{ address }} 
+    	{%elif error%}
+    	Not a valid query! Please try searching for another location.
     	{%else%}
     	Let's Eat!
     	{% endif %}</h1>
