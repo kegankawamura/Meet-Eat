@@ -155,7 +155,7 @@ def make_query():
     params["term"] = "restaurants"
     params["location"] = cur_session.location
     params["radius_filter"] = "20000"
-    params["limit"] = "3"
+    params["limit"] = "10"
     params["category_filter"] = best_cuisine
 
     s = rauth.OAuth1Session(
@@ -185,7 +185,7 @@ def extract_useful_data(businesses):
     for business in businesses:
         d = {'name': if_exists('name', business), 'rating': if_exists('rating', business), 'review_count': if_exists('review_count', business), 'url': if_exists('url', business), 'rating_img_url': if_exists('rating_img_url', business), 'image_url': if_exists('image_url', business)}
         if 'location' in business:
-           d['address'] = if_exists('address', business)
+           d['address'] = ",".join(if_exists('address', business['location']))
         useful_data.append(d)
     return useful_data
 

@@ -12,8 +12,8 @@
         {%else%}
         Something went wrong...
         {%endif%}</h1>
-    <h2>{% if new_url %} <a href={{poll_url.split("/")[1]}}>{{poll_url}}</a> {% endif %}</h2>
-    <h3>{% if display_map %} {{display_map.html}} {% endif %}
+    <h2>{% if new_url %} <a target="_blank" href={{"/".join(poll_url.rsplit("/")[1:])}}>{{poll_url}}</a> {% endif %}</h2>
+        {% if display_map %} <div id="map">{{display_map.html}}</div> {% endif %}
 </div>
 {% if not error %} {{wtf.quick_form(form)}} {% endif %}
 {% endblock %}
