@@ -13,6 +13,8 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user,\
     current_user
 from oauth import OAuthSignIn
 
+from flask_googlemaps import GoogleMaps, Map
+
 
 from models import User, Session, Poll
 from database import db_session, db
@@ -38,6 +40,7 @@ app.config['OAUTH_CREDENTIALS'] = {
     }
 
 }
+app.config['GOOGLEMAPS_KEY'] = ServerKey
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config.from_object("config.Config")
@@ -46,6 +49,11 @@ bootstrap = Bootstrap(app)
 db.init_app(app)
 lm = LoginManager(app)
 lm.login_view = 'index'
+
+"""
+Google Maps
+"""
+GoogleMaps(app, key=ServerKey)
 
 """
 SESSION CREATION
@@ -91,7 +99,11 @@ def index():
             new_url, new_address = True, True
             location = gmaps.places_autocomplete(session['searchterm'])[0]
             address = location['description']
-            rand_url = addon()
+	    coord = gmaps.geocode(address)
+	    latitude = coord[0]['geometry']['location']['lat']
+            longitude = coord[0]['geometry']['location']['lng']
+            search_map = Map(identifier="vicinity", lat=latitude, lng=longitude, markers=[(latitude, longitude, address)])
+	    rand_url = addon()
             user_obj = db_session.query(User).filter_by(name=current_user.name).first() 
             s = Session(rand_url, user_obj, address)
             db_session.add(s)
@@ -101,7 +113,7 @@ def index():
             new_url, new_address = False, False
             rand_url = ""
         #geocode_result = gmaps.geocode(address)
-        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/"+rand_url,address=address,error=error)
+        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/"+rand_url,address=address,error=error,display_map=search_map)
     logged_in = None
     return render_template('index.html', form=search_form, address=address,username=logged_in,error=error)
 

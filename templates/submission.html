@@ -1,9 +1,9 @@
-{%extends "base.html" %}
-
+{% extends "base.html" %}
 {% block title %} Meet&Eat {% endblock %}
 
 {% import "bootstrap/wtf.html" as wtf %}
 
+{% block head %} {{super()}}{{display_map.js}} {% endblock %}
 {%block page_content %}
 <div class="page-header">
     <h1>{%if new_address and not error%} You want to eat in the vicinity of {{address}}.
@@ -13,6 +13,7 @@
         Something went wrong...
         {%endif%}</h1>
     <h2>{% if new_url %} <a href={{poll_url.split("/")[1]}}>{{poll_url}}</a> {% endif %}</h2>
+    <h3>{% if display_map %} {{display_map.html}} {% endif %}
 </div>
-{% if not error %}{{wtf.quick_form(form)}} {% endif %}
+{% if not error %} {{wtf.quick_form(form)}} {% endif %}
 {% endblock %}
