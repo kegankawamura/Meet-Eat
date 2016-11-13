@@ -18,7 +18,7 @@ from models import User, Session, Poll
 from database import db_session, db
 import googlemaps
 from datetime import datetime
-from tokens import ServerKey
+from tokens import ServerKey, ip
 
 """
 APP SETTINGS
@@ -52,7 +52,7 @@ SESSION CREATION
 """
 
 new_url = False
-poll_url = "localhost:5000/"
+poll_url = ip
 new_address = False
 error = False
 location,address = 0,""
@@ -81,7 +81,6 @@ class CloseForm(Form):
     close = SubmitField('Close Poll')
 
 @app.route("/", methods=['GET', 'POST'])
-def search():
 def index():
     search_form = SearchForm()
     close_form = CloseForm()
@@ -93,7 +92,7 @@ def index():
             location = gmaps.places_autocomplete(session['searchterm'])[0]
             address = location['description']
             rand_url = addon()
-            user_obj = db_session.query(User).filter_by(name=session['user']).first() 
+            user_obj = db_session.query(User).filter_by(name=current_user.name).first() 
             s = Session(rand_url, user_obj, address)
             db_session.add(s)
             db_session.commit()
@@ -102,11 +101,8 @@ def index():
             new_url, new_address = False, False
             rand_url = ""
         #geocode_result = gmaps.geocode(address)
-        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+rand_url,address=address,error=error)
-    if 'user' in session.keys() and session['user']:
-        logged_in = session['user']
-    else:
-        logged_in = None
+        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/"+rand_url,address=address,error=error)
+    logged_in = None
     return render_template('index.html', form=search_form, address=address,username=logged_in,error=error)
 
 """
@@ -122,9 +118,10 @@ class PollForm(Form):
 @app.route("/<unique_id>", methods=['GET', 'POST'])
 def poll(unique_id):
     form = PollForm()
+    s = db_session.query(Session).filter_by(url_id=unique_id).first()
+    owner = s.owner.name
     if form.validate_on_submit():
-        user_obj = db_session.query(User).filter_by(name=session['user']).first()
-        s = db_session.query(Session).filter_by(url_id=unique_id).first()
+        user_obj = db_session.query(User).filter_by(name=current_user.name).first()
         price_choice = form.price.data
         print unique_id
         cuisine_choice = ' '.join(form.keywords.data)
@@ -132,8 +129,8 @@ def poll(unique_id):
         p = Poll(price_choice, cuisine_choice, s, user_obj)
         db_session.add(p)
         db_session.commit()
-	return render_template('thanks.html')
-    return render_template('poll.html', form=form)
+	return render_template('thanks.html', owner=owner)
+    return render_template('poll.html', form=form, owner=owner)
 
 """
 LOGIN VIEWS

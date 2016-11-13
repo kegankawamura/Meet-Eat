@@ -12,7 +12,7 @@
         {%else%}
         Something went wrong...
         {%endif%}</h1>
-    <h2>{% if new_url %} {{poll_url}} {% endif %}</h2>
+    <h2>{% if new_url %} <a href={{poll_url.split("/")[1]}}>{{poll_url}}</a> {% endif %}</h2>
 </div>
 {% if not error %}{{wtf.quick_form(form)}} {% endif %}
 {% endblock %}
