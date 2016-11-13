@@ -1,12 +1,12 @@
 {%extends "base.html" %}
 
-{% block title %} Welp {% endblock %}
+{% block title %} Meet&Eat {% endblock %}
 
 {% import "bootstrap/wtf.html" as wtf %}
 
 {%block page_content %}
 <div class="page-header">
-    <h1>{%if new_address and not error%} You want to eat in the vicinity of {{address}}
+    <h1>{%if new_address and not error%} You want to eat in the vicinity of {{address}}.
         {%elif error%}
         Not a valid query! Please try searching for another location.
         {%else%}

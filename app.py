@@ -59,8 +59,8 @@ def search():
     address,error = "",False
     if search_form.validate_on_submit():
         session['searchterm'] = search_form.searchterm.data 
-        new_url,new_address = True, True
         try:
+            new_url, new_address = True, True
             location = gmaps.places_autocomplete(session['searchterm'])[0]
             address = location['description']
             rand_url = poll_url+addon()
@@ -70,6 +70,8 @@ def search():
             db_session.commit()
         except IndexError:
             error = True
+            new_url, new_address = False, False
+            rand_url = ""
         #geocode_result = gmaps.geocode(address)
         return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=rand_url,address=address,error=error)
     if 'user' in session.keys() and session['user']:
