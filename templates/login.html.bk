@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>{% if result %} Thanks for logging in {{ user }} {% endif %}</h1>
+    <h1>{% if not result %} Login failed as {{ user }} {% endif %}</h1>
+</div>
+{% endblock %}

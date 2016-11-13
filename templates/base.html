@@ -22,6 +22,9 @@
     <div class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
             <li><a href="/">App</a></li>
+	    {% if current_user.is_authenticated %} <li><a href="/logout">Logout</a></li>
+	    <li><a> You are logged in as {{ current_user.name }} </a></li>
+	    {% else %} <li><a href="/login">Login</a></li> {% endif %}
         </ul>
     </div>
 </div>
