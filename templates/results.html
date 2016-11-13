@@ -5,14 +5,21 @@
 <div class="page_header">
   <h1> Your Choices:</h1>
   <div>
+    <div class="container"> 
     {% for business in businesses %}
-    <ul>
-      {% for key in business.keys() %}
-        <li>
-        {{ key|e }} : {{business[key]|e}}
-        </li>
-      {% endfor %} 
-    </ul>
+      <div class="row">
+        <div class="col-lg-6 col-sm-12">
+          <img src={{ business['image_url'] }}>
+        </div>
+        <div class="col-lg-6 col-sm-12">
+          <ul style="list-style: none;">
+            <li>{{ business['name'] }}</li>
+            <li>{{ business['review_count'] }} ratings, <img src={{ business['rating_img_url'] }}></li>
+            {% if business['address'] is not None %}<li>{{ business['address'] }}</li> {% endif %}
+            <li>Yelp URL: {{ business['url'] }}</li>
+          </ul>
+        </div>
+      </div>
     {% endfor %}
   </div>
 {% endblock %}
