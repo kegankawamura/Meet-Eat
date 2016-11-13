@@ -1,6 +1,6 @@
 from sqlalchemy.dialects.postgresql import JSON
 from database import Base, db
-
+from flask_login import UserMixin
 class Session(Base):
   __tablename__ = 'session'
 
@@ -32,10 +32,14 @@ class Poll(Base):
     self.session = session
     self.user = user
 
-class User(Base):
+class User(UserMixin, Base):
   __tablename__ = 'user'
   id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String()) 
+  name = db.Column(db.String())
+  social_id = db.Column(db.String(64), nullable=False)
+  email = db.Column(db.String(64), nullable=True) 
 
-  def __init__(self, name):
+  def __init__(self, social_id, name, email=None):
      self.name = name
+     self.social_id = social_id
+     self.email = email

@@ -20,7 +20,7 @@ def init_db():
     users = ["Tommy", "Averal", "Jordan", "Kegan", "Mason"]
     for user in users:
 	print("Initializing " + user)
-    	get_or_create(db_session, User, name=user)
+    	get_or_create(db_session, User, name=user, social_id=user)
     print("Initializing user done")
 
 def get_or_create(session, model, **kwargs):

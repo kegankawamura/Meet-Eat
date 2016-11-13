@@ -7,6 +7,13 @@ from wtforms.validators import Required
 import string
 import random
 
+
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user,\
+    current_user
+from oauth import OAuthSignIn
+
+
 from models import User, Session, Poll
 from database import db_session, db
 import googlemaps
@@ -17,11 +24,28 @@ from tokens import ServerKey
 APP SETTINGS
 """
 app = Flask(__name__)
+
+# app.config['SECRET_KEY'] = 'top secret!'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+app.config['OAUTH_CREDENTIALS'] = {
+    'facebook': {
+        'id': '1603553963285641',
+        'secret': 'ebd2e3b162b4c1814d630aae5fe84ab7'
+    },   
+    'twitter': {
+        'id': 'fake',
+        'secret': 'fake'
+    }
+
+}
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config.from_object("config.Config")
 app.config['SECRET_KEY'] = 'hard'
 bootstrap = Bootstrap(app)
 db.init_app(app)
+lm = LoginManager(app)
+lm.login_view = 'index'
 
 """
 SESSION CREATION
@@ -58,6 +82,7 @@ class CloseForm(Form):
 
 @app.route("/", methods=['GET', 'POST'])
 def search():
+def index():
     search_form = SearchForm()
     close_form = CloseForm()
     address,error = "",False
@@ -114,19 +139,45 @@ def poll(unique_id):
 LOGIN VIEWS
 """
 
-@app.route("/login/<user>")
-def login(user):
-    user_item = db_session.query(User).filter_by(name=user).first()
-    if user_item:
-    	session['user'] = user
-	return render_template('login.html', user=user, result=True)
-    else:
-	return render_template('login.html', user=user, result=False)
+@lm.user_loader
+def load_user(id):
+	return User.query.get(int(id))
+
+@app.route("/login/")
+def login():
+    return render_template('login.html')
     
 @app.route("/logout")
 def logout():
-    session['user'] = None
-    return render_template('logout.html')
+    #session['user'] = None
+    #return render_template('logout.html')
+    logout_user()
+    return redirect(url_for('index'))
+@app.route('/authorize/<provider>')
+def oauth_authorize(provider):
+    if not current_user.is_anonymous:
+        return redirect(url_for('index'))
+    oauth = OAuthSignIn.get_provider(provider)
+    return oauth.authorize()
+
+
+@app.route('/callback/<provider>')
+def oauth_callback(provider):
+    if not current_user.is_anonymous:
+        return redirect(url_for('index'))
+    oauth = OAuthSignIn.get_provider(provider)
+    social_id, username, email = oauth.callback()
+    if social_id is None:
+        flash('Authentication failed.')
+        return redirect(url_for('index'))
+    user = User.query.filter_by(social_id=social_id).first()
+    if not user:
+        user = User(social_id=social_id, name=username, email=email)
+        db.session.add(user)
+        db.session.commit()
+    login_user(user, True)
+    return redirect(url_for('index'))
+
 
 """
 MAIN APP
