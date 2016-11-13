@@ -11,7 +11,7 @@ import rauth
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user,\
-    current_user
+    current_user, login_required
 from oauth import OAuthSignIn
 
 from flask_googlemaps import GoogleMaps, Map
@@ -91,6 +91,8 @@ class SearchForm(Form):
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
+    if current_user.is_anonymous:
+	return redirect(url_for('login'))
     search_form = SearchForm()
     close_form = CloseForm()
     address,error = "",False
@@ -212,7 +214,7 @@ class PollForm(Form):
     #keyterms = StringField("Keyterms")
     submit = SubmitField('Submit')
 
-@app.route("/<unique_id>", methods=['GET', 'POST'])
+@app.route("/poll/<unique_id>", methods=['GET', 'POST'])
 def poll(unique_id):
     form = PollForm()
     s = db_session.query(Session).filter_by(url_id=unique_id).first()
@@ -270,6 +272,24 @@ def oauth_callback(provider):
     login_user(user, True)
     return redirect(url_for('index'))
 
+class LoginForm(Form):
+    username = StringField('Username', validators=[Required()])
+    submit = SubmitField('Submit')
+    def validate(self):
+        rv = Form.validate(self)
+        if not rv:
+	    return False
+	user = db_session.query(User).filter_by(name=self.username.data).first()
+        return not (user is None)
+
+
+@app.route("/login_staff/", methods=["GET", "POST"])
+def login_staff():
+    form = LoginForm()
+    if form.validate_on_submit():
+	login_user(User.query.filter_by(name=form.username.data).first())
+	return redirect(url_for('index'))
+    return render_template('login_staff.html', form=form)
 
 """
 MAIN APP
