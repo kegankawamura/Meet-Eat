@@ -6,13 +6,11 @@
 
 {% block page_content %}
 <div class="page-header">
-    <h1>{% if new_address and not error %}Here's where you want to eat: {{ address }} 
-    	{%elif error%}
-    	Not a valid query! Please try searching for another location.
-    	{%else%}
-    	Let's Eat!
-    	{% endif %}</h1>
-    <h2> {% if new_url %}{{poll_url}} {% endif %}</h2>
+    <h1>{% if username and not error %}
+	Hi there {{ username }}!
+    	{% endif %}
+        Let's eat!
+    </h1>
 </div>
 {{ wtf.quick_form(form) }}
 {% endblock %}

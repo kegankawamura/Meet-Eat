@@ -72,7 +72,11 @@ def search():
             error = True
         #geocode_result = gmaps.geocode(address)
         return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=rand_url,address=address,error=error)
-    return render_template('index.html', form=search_form, address=address)
+    if 'user' in session.keys() and session['user']:
+        logged_in = session['user']
+    else:
+        logged_in = None
+    return render_template('index.html', form=search_form, address=address,username=logged_in,error=error)
 
 """
 POLL VIEWS
