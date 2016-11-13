@@ -115,23 +115,20 @@ def index():
             rand_url = ""
         #geocode_result = gmaps.geocode(address)
         return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/"+rand_url,address=address,error=error,display_map=search_map)
-    elif close_form.validate_on_submit() and 'user' in session.keys() and session['user']:
-        get_result()
-    if 'user' in session.keys() and session['user']:
-        logged_in = session['user']
-    else:
-        logged_in = None
-    return render_template('index.html', form=search_form, address=address,username=logged_in,error=error)
+    elif close_form.validate_on_submit():
+        return redirect(url_for('close'))
+    return render_template('index.html', form=search_form, address=address,username=current_user.name,error=error)
 
 
 def make_query():
     # aggregate polls
 
-    me = db_session.query(User).filter_by(name=session['user']).first()
-    cur_session = db_session.query(Session).filter_by(owner=me).order_by(Session.time_created).first()
+    me = db_session.query(User).filter_by(name=current_user.name).first()
+    cur_session = db_session.query(Session).filter_by(owner=me).order_by(Session.time_created.desc()).first()
     polls = db_session.query(Poll).filter_by(session=cur_session).all()
 
-
+    if not polls:
+        return None, None
     response_data = {}
     average_price = 0.
     # majority vote
@@ -151,10 +148,10 @@ def make_query():
     print average_price
     print cur_session.location
 
-
+    
     params = {}
     params["term"] = "restaurants"
-    params["location"] = "{},{}".format(str(cur_session.location[0]),str(cur_session.location[1]))
+    params["location"] = cur_session.location
     params["radius_filter"] = "20000"
     params["limit"] = "3"
     params["category_filter"] = best_cuisine
@@ -169,8 +166,8 @@ def make_query():
     request = s.get("http://api.yelp.com/v2/search", params=params)
     data = request.json()
     s.close()
-    if len(data['businesses']) == 0:
-        return None
+    if 'businesses' not in data.keys() or len(data['businesses']) == 0:
+        return None, None
     filter_data = []
     for business in data['businesses']:
         # check if the business is closed
@@ -199,9 +196,11 @@ def if_exists(key, dictionary):
 RESULTS VIEWS
 """
 @app.route("/close", methods=["GET", "POST"])
-def get_result():
+def close():
     businesses, average_price = make_query()
-    print businesses, average_price
+    if not businesses or not average_price:
+        print("ERROR!")
+    return render_template('results.html', businesses=businesses)
 
 """
 POLL VIEWS
@@ -244,8 +243,6 @@ def login():
     
 @app.route("/logout")
 def logout():
-    #session['user'] = None
-    #return render_template('logout.html')
     logout_user()
     return redirect(url_for('index'))
 @app.route('/authorize/<provider>')
