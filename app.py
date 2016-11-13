@@ -116,7 +116,7 @@ def index():
             new_url, new_address = False, False
             rand_url = ""
         #geocode_result = gmaps.geocode(address)
-        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/"+rand_url,address=address,error=error,display_map=search_map)
+        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/poll/"+rand_url,address=address,error=error,display_map=search_map)
     elif close_form.validate_on_submit():
         return redirect(url_for('close'))
     return render_template('index.html', form=search_form, address=address,username=current_user.name,error=error)
