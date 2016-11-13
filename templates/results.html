@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %} Meet&Eat {% endblock %}
+{%import "bootstrap/wtf.html" as wtf %}
+{% block page_content %}
+<div class="page_header">
+  <h1> Your Choices:</h1>
+  <div>
+    {% for business in businesses %}
+    <ul>
+      {% for key in business.keys() %}
+        <li>
+        {{ key|e }} : {{business[key]|e}}
+        </li>
+      {% endfor %} 
+    </ul>
+    {% endfor %}
+  </div>
+{% endblock %}
