@@ -6,6 +6,7 @@ from wtforms import widgets, StringField, SubmitField, RadioField, IntegerField,
 from wtforms.validators import Required
 import string
 import random
+import rauth
 
 
 from flask_sqlalchemy import SQLAlchemy
@@ -20,7 +21,7 @@ from models import User, Session, Poll
 from database import db_session, db
 import googlemaps
 from datetime import datetime
-from tokens import ServerKey, ip
+from tokens import *
 
 """
 APP SETTINGS
@@ -71,6 +72,9 @@ class MultiCheckboxField(SelectMultipleField):
     widget = widgets.ListWidget(prefix_label=False)
     option_widget = widgets.CheckboxInput()
 
+class CloseForm(Form):
+    close = SubmitField('Close Poll')
+
 def addon():
     result = ""
     for _ in range(5):
@@ -84,9 +88,6 @@ def addon():
 class SearchForm(Form):
     searchterm = StringField('Where do you want to eat?', validators=[Required()])
     submit = SubmitField('Submit')
-
-class CloseForm(Form):
-    close = SubmitField('Close Poll')
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -114,8 +115,93 @@ def index():
             rand_url = ""
         #geocode_result = gmaps.geocode(address)
         return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+"/"+rand_url,address=address,error=error,display_map=search_map)
-    logged_in = None
+    elif close_form.validate_on_submit() and 'user' in session.keys() and session['user']:
+        get_result()
+    if 'user' in session.keys() and session['user']:
+        logged_in = session['user']
+    else:
+        logged_in = None
     return render_template('index.html', form=search_form, address=address,username=logged_in,error=error)
+
+
+def make_query():
+    # aggregate polls
+
+    me = db_session.query(User).filter_by(name=session['user']).first()
+    cur_session = db_session.query(Session).filter_by(owner=me).order_by(Session.time_created).first()
+    polls = db_session.query(Poll).filter_by(session=cur_session).all()
+
+
+    response_data = {}
+    average_price = 0.
+    # majority vote
+    for poll in polls:
+        average_price += poll.price
+        prefs = poll.resp.split()
+        for pref in prefs:
+            if pref not in response_data:
+                response_data[pref] = 1
+            else:
+                response_data[pref] += 1
+    average_price /= len(polls)
+    most_votes = max(response_data.values())
+    best_cuisine = ",".join([k for k,v in response_data.items() if v == most_votes])
+
+    print best_cuisine
+    print average_price
+    print cur_session.location
+
+
+    params = {}
+    params["term"] = "restaurants"
+    params["location"] = "{},{}".format(str(cur_session.location[0]),str(cur_session.location[1]))
+    params["radius_filter"] = "20000"
+    params["limit"] = "3"
+    params["category_filter"] = best_cuisine
+
+    s = rauth.OAuth1Session(
+        consumer_key = CONSUMER_KEY,
+        consumer_secret = CONSUMER_SECRET,
+        access_token = TOKEN,
+        access_token_secret = TOKEN_SECRET
+        )
+
+    request = s.get("http://api.yelp.com/v2/search", params=params)
+    data = request.json()
+    s.close()
+    if len(data['businesses']) == 0:
+        return None
+    filter_data = []
+    for business in data['businesses']:
+        # check if the business is closed
+        if not business['is_closed']:
+            filter_data.append(business)
+
+    fields = extract_useful_data(filter_data)
+    return fields, average_price
+
+# if an entry doesn't exist, return 'None'
+def extract_useful_data(businesses):
+    useful_data = [] 
+    for business in businesses:
+        d = {'name': if_exists('name', business), 'rating': if_exists('rating', business), 'review_count': if_exists('review_count', business), 'url': if_exists('url', business), 'rating_img_url': if_exists('rating_img_url', business), 'image_url': if_exists('image_url', business)}
+        if 'location' in business:
+           d['address'] = if_exists('address', business)
+        useful_data.append(d)
+    return useful_data
+
+def if_exists(key, dictionary):
+    if key in dictionary:
+        return dictionary[key]
+    return None
+
+"""
+RESULTS VIEWS
+"""
+@app.route("/close", methods=["GET", "POST"])
+def get_result():
+    businesses, average_price = make_query()
+    print businesses, average_price
 
 """
 POLL VIEWS
