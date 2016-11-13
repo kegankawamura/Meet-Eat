@@ -1,11 +1,14 @@
 from sqlalchemy.dialects.postgresql import JSON
 from database import Base, db
 from flask_login import UserMixin
+from datetime import datetime
+
 class Session(Base):
   __tablename__ = 'session'
 
   id = db.Column(db.Integer, primary_key=True)
   url_id = db.Column(db.String())
+  time_created = db.Column(db.DateTime())
   owner = db.relationship("User")
   owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
   location = db.Column(db.String())
@@ -14,6 +17,7 @@ class Session(Base):
     self.url_id = url_id
     self.owner = owner
     self.location = location
+    self.time_created = datetime.now()
 
 class Poll(Base):
   __tablename__ = 'poll'
