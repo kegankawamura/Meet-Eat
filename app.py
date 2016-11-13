@@ -1,8 +1,8 @@
 #app.py 
 from flask import Flask, render_template, session, redirect, url_for, request 
 from flask_bootstrap import Bootstrap
-from flask.ext.wtf import Form 
-from wtforms import StringField, SubmitField, RadioField
+from flask.ext.wtf import Form
+from wtforms import widgets, StringField, SubmitField, RadioField, IntegerField, SelectMultipleField
 from wtforms.validators import Required
 import string
 import random
@@ -35,6 +35,10 @@ location,address = 0,""
 gmaps = googlemaps.Client(key=ServerKey)
 
 
+class MultiCheckboxField(SelectMultipleField):
+    widget = widgets.ListWidget(prefix_label=False)
+    option_widget = widgets.CheckboxInput()
+
 def addon():
     result = ""
     for _ in range(5):
@@ -63,7 +67,7 @@ def search():
             new_url, new_address = True, True
             location = gmaps.places_autocomplete(session['searchterm'])[0]
             address = location['description']
-            rand_url = poll_url+addon()
+            rand_url = addon()
             user_obj = db_session.query(User).filter_by(name=session['user']).first() 
             s = Session(rand_url, user_obj, address)
             db_session.add(s)
@@ -73,7 +77,7 @@ def search():
             new_url, new_address = False, False
             rand_url = ""
         #geocode_result = gmaps.geocode(address)
-        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=rand_url,address=address,error=error)
+        return render_template('submission.html',form=close_form,new_url=new_url,new_address=new_address,poll_url=poll_url+rand_url,address=address,error=error)
     if 'user' in session.keys() and session['user']:
         logged_in = session['user']
     else:
@@ -85,15 +89,24 @@ POLL VIEWS
 """
 
 class PollForm(Form):
-    price = RadioField(label="price", description="Price", choices=[('$', '$'), ('$$', '$$'), ('$$$', '$$$')])
-    keywords = RadioField("Type", choices=[('As', 'Asian'), ('Am', 'American'), ('Eu', 'European'), ('Af', 'African')])
-    keyterms = StringField("Keyterms")
+    price = IntegerField(label="price", description="Price")
+    keywords = SelectMultipleField(label="Type", choices=[('newamerican', 'New American'), ('tradamerican', 'Traditional American'), ('chinese', 'Chinese'), ('indpak', 'Indian'), ('italian', 'Italian'), ('japanese', 'Japanese'), ('korean', 'Korean'), ('mediterranean', 'Mediterranean'), ('mexican', 'Mexican'), ('thai', 'Thai'), ('taiwanese', 'Taiwanese'), ('vietnamese', 'Vietnamese')])
+    #keyterms = StringField("Keyterms")
     submit = SubmitField('Submit')
 
-@app.route("/user/<unique_id>", methods=['GET', 'POST'])
+@app.route("/<unique_id>", methods=['GET', 'POST'])
 def poll(unique_id):
     form = PollForm()
     if form.validate_on_submit():
+        user_obj = db_session.query(User).filter_by(name=session['user']).first()
+        s = db_session.query(Session).filter_by(url_id=unique_id).first()
+        price_choice = form.price.data
+        print unique_id
+        cuisine_choice = ' '.join(form.keywords.data)
+        print cuisine_choice
+        p = Poll(price_choice, cuisine_choice, s, user_obj)
+        db_session.add(p)
+        db_session.commit()
 	return render_template('thanks.html')
     return render_template('poll.html', form=form)
 

@@ -19,7 +19,7 @@ class Poll(Base):
   __tablename__ = 'poll'
   id = db.Column(db.Integer, primary_key=True)
   
-  price = db.Column(db.String())
+  price = db.Column(db.Integer())
   resp = db.Column(db.String()) 
   session = db.relationship("Session") 
   session_id = db.Column(db.Integer, db.ForeignKey('session.id'))
